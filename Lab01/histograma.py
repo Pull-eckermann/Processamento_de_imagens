@@ -59,12 +59,14 @@ for teste in os.listdir("."):                                       #Le todos os
         continue
     img1 = cv2.imread(teste)
     hist1 = cv2.calcHist([img1], [2], None, [256], [0,256])
+    cv2.normalize(hist1, hist1, 0, 255, cv2.NORM_MINMAX)
 
     for comp in os.listdir("."):
         if (not(comp.endswith(".bmp")) or (comp == teste)):         #Se não for imagem.bmp ou se a imagem teste
             continue                                                #for a mesma da comparação, pula pra próxima iteração
         img2 = cv2.imread(comp)
         hist2 = cv2.calcHist([img2], [2], None, [256], [0,256])
+        cv2.normalize(hist2, hist2, 0, 255, cv2.NORM_MINMAX)
         result = cv2.compareHist(hist1, hist2, cv2.HISTCMP_CORREL)
         if result > aux:                                            #Confere qual o maior resultado das comparações nas iterações
             aux = result
@@ -79,19 +81,21 @@ limpa_listas()
 
 #Comparação usando HISTCMP_CHISQR
 for teste in os.listdir("."):                                       #Le todos os arquivos do diretório corrente
-    aux = 0
+    aux = 100
     if not(teste.endswith(".bmp")):                                 #Se não for imagem.bmp pula pra próxima iteração
         continue
     img1 = cv2.imread(teste)
     hist1 = cv2.calcHist([img1], [2], None, [256], [0,256])
+    cv2.normalize(hist1, hist1, 0, 255, cv2.NORM_MINMAX)
 
     for comp in os.listdir("."):
         if (not(comp.endswith(".bmp")) or (comp == teste)):         #Se não for imagem.bmp ou se a imagem teste
             continue                                                #for a mesma da comparação, pula pra próxima iteração
         img2 = cv2.imread(comp)
         hist2 = cv2.calcHist([img2], [2], None, [256], [0,256])
+        cv2.normalize(hist2, hist2, 0, 255, cv2.NORM_MINMAX)
         result = cv2.compareHist(hist1, hist2, cv2.HISTCMP_CHISQR)
-        if result > aux:                                            #Confere qual o maior resultado das comparações nas iterações
+        if result < aux:                                            #Confere qual o maior resultado das comparações nas iterações
             aux = result
             img_aux = comp                                          #Guarda o nome da imagem com maior semelhança
 
@@ -109,12 +113,14 @@ for teste in os.listdir("."):                                       #Le todos os
         continue
     img1 = cv2.imread(teste)
     hist1 = cv2.calcHist([img1], [2], None, [256], [0,256])
+    cv2.normalize(hist1, hist1, 0, 255, cv2.NORM_MINMAX)
 
     for comp in os.listdir("."):
         if (not(comp.endswith(".bmp")) or (comp == teste)):         #Se não for imagem.bmp ou se a imagem teste
             continue                                                #for a mesma da comparação, pula pra próxima iteração
         img2 = cv2.imread(comp)
         hist2 = cv2.calcHist([img2], [2], None, [256], [0,256])
+        cv2.normalize(hist2, hist2, 0, 255, cv2.NORM_MINMAX)
         result = cv2.compareHist(hist1, hist2, cv2.HISTCMP_INTERSECT)
         if result > aux:                                            #Confere qual o maior resultado das comparações nas iterações
             aux = result
@@ -129,19 +135,21 @@ limpa_listas()
 
 #Comparação usando HISTCMP_BHATTACHARYYA
 for teste in os.listdir("."):                                       #Le todos os arquivos do diretório corrente
-    aux = 0
+    aux = 100
     if not(teste.endswith(".bmp")):                                 #Se não for imagem.bmp pula pra próxima iteração
         continue
     img1 = cv2.imread(teste)
     hist1 = cv2.calcHist([img1], [2], None, [256], [0,256])
+    cv2.normalize(hist1, hist1, 0, 255, cv2.NORM_MINMAX)
 
     for comp in os.listdir("."):
         if (not(comp.endswith(".bmp")) or (comp == teste)):         #Se não for imagem.bmp ou se a imagem teste
             continue                                                #for a mesma da comparação, pula pra próxima iteração
         img2 = cv2.imread(comp)
         hist2 = cv2.calcHist([img2], [2], None, [256], [0,256])
+        cv2.normalize(hist2, hist2, 0, 255, cv2.NORM_MINMAX)
         result = cv2.compareHist(hist1, hist2, cv2.HISTCMP_BHATTACHARYYA)
-        if result > aux:                                            #Confere qual o maior resultado das comparações nas iterações
+        if result < aux:                                            #Confere qual o maior resultado das comparações nas iterações
             aux = result
             img_aux = comp                                          #Guarda o nome da imagem com maior semelhança
 
