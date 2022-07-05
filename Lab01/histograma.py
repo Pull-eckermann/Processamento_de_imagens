@@ -1,4 +1,5 @@
 import cv2
+from cv2 import HISTCMP_CORREL
 from matplotlib import pyplot as plt
 import os
 from os import listdir
@@ -33,6 +34,11 @@ def calcula_acerto():
 
 #Verifica pelo nome da imagem, a qual classe pertence teste
 def verifica_classe(img_aux, teste):
+    global bart
+    global homer
+    global lisa
+    global margie
+    global megie
     if "b" == img_aux[0]:                                           
         bart.append(teste)
     if "h" == img_aux[0]:
@@ -46,116 +52,89 @@ def verifica_classe(img_aux, teste):
 
 #Limpa as listas para utilização no próximo método
 def limpa_listas():
+    global bart
+    global homer
+    global lisa
+    global margie
+    global megie
     bart.clear()
     homer.clear()
     lisa.clear()
     margie.clear()
     megie.clear()
 
+#Função que faz a comparação utilizando o metodo de comparação de histogramas passado como parâmetro
+def compara_metodo(metodo):
+    for teste in os.listdir("."):                                       #Le todos os arquivos do diretório corrente
+        aux1 = 0
+        aux2 = 200
+        if not(teste.endswith(".bmp")):                                 #Se não for imagem.bmp pula pra próxima iteração
+            continue
+        img1 = cv2.imread(teste)
+        hist1 = 0
+        for x in range(0,3):                                            #Calcula os histogramas dos 3 canais RGB
+            hist_aux = cv2.calcHist([img1], [x], None, [256], [0,256])
+            hist1 += hist_aux 
+        hist1 = hist1/3                                                 #Tira a Média dos histogramas
+        cv2.normalize(hist1, hist1, 0, 255, cv2.NORM_MINMAX)
+
+        for comp in os.listdir("."):
+            if (not(comp.endswith(".bmp")) or (comp == teste)):         #Se não for imagem.bmp ou se a imagem teste
+                continue                                                #for a mesma da comparação, pula pra próxima iteração
+            img2 = cv2.imread(comp)
+            hist2 = 0
+            for x in range(0,3):
+                hist_aux = cv2.calcHist([img2], [x], None, [256], [0,256])
+                hist2 += hist_aux 
+            hist2 = hist2/3
+            cv2.normalize(hist2, hist2, 0, 255, cv2.NORM_MINMAX)
+            if metodo == "HISTCMP_CORREL":
+                result = cv2.compareHist(hist1, hist2, cv2.HISTCMP_CORREL)
+                if result > aux1:                                            #Confere qual o maior resultado das comparações nas iterações
+                    aux1 = result
+                    img_aux = comp                                          #Guarda o nome da imagem com maior semelhança
+
+            if metodo == "HISTCMP_CHISQR":
+                result = cv2.compareHist(hist1, hist2, cv2.HISTCMP_CHISQR)
+                if result < aux2:
+                    aux2 = result
+                    img_aux = comp
+
+            if metodo == "HISTCMP_INTERSECT":
+                result = cv2.compareHist(hist1, hist2, cv2.HISTCMP_INTERSECT)
+                if result > aux1:
+                    aux1 = result
+                    img_aux = comp 
+
+            if metodo == "HISTCMP_BHATTACHARYYA":
+                result = cv2.compareHist(hist1, hist2, cv2.HISTCMP_BHATTACHARYYA)
+                if result < aux2: 
+                    aux2 = result
+                    img_aux = comp
+
+        #Verifica pelo nome da imagem, a qual classe pertence teste
+        verifica_classe(img_aux, teste)
+
 #Comparação usando HISTCMP_CORREL
-for teste in os.listdir("."):                                       #Le todos os arquivos do diretório corrente
-    aux = 0
-    if not(teste.endswith(".bmp")):                                 #Se não for imagem.bmp pula pra próxima iteração
-        continue
-    img1 = cv2.imread(teste)
-    hist1 = cv2.calcHist([img1], [2], None, [256], [0,256])
-    cv2.normalize(hist1, hist1, 0, 255, cv2.NORM_MINMAX)
-
-    for comp in os.listdir("."):
-        if (not(comp.endswith(".bmp")) or (comp == teste)):         #Se não for imagem.bmp ou se a imagem teste
-            continue                                                #for a mesma da comparação, pula pra próxima iteração
-        img2 = cv2.imread(comp)
-        hist2 = cv2.calcHist([img2], [2], None, [256], [0,256])
-        cv2.normalize(hist2, hist2, 0, 255, cv2.NORM_MINMAX)
-        result = cv2.compareHist(hist1, hist2, cv2.HISTCMP_CORREL)
-        if result > aux:                                            #Confere qual o maior resultado das comparações nas iterações
-            aux = result
-            img_aux = comp                                          #Guarda o nome da imagem com maior semelhança
-
-    #Verifica pelo nome da imagem, a qual classe pertence teste
-    verifica_classe(img_aux, teste)
-
+compara_metodo("HISTCMP_CORREL")
 correl_result = calcula_acerto()                                    
 print("A taxa de acerto do método CORREL é:",correl_result)
 limpa_listas()
 
 #Comparação usando HISTCMP_CHISQR
-for teste in os.listdir("."):                                       #Le todos os arquivos do diretório corrente
-    aux = 100
-    if not(teste.endswith(".bmp")):                                 #Se não for imagem.bmp pula pra próxima iteração
-        continue
-    img1 = cv2.imread(teste)
-    hist1 = cv2.calcHist([img1], [2], None, [256], [0,256])
-    cv2.normalize(hist1, hist1, 0, 255, cv2.NORM_MINMAX)
-
-    for comp in os.listdir("."):
-        if (not(comp.endswith(".bmp")) or (comp == teste)):         #Se não for imagem.bmp ou se a imagem teste
-            continue                                                #for a mesma da comparação, pula pra próxima iteração
-        img2 = cv2.imread(comp)
-        hist2 = cv2.calcHist([img2], [2], None, [256], [0,256])
-        cv2.normalize(hist2, hist2, 0, 255, cv2.NORM_MINMAX)
-        result = cv2.compareHist(hist1, hist2, cv2.HISTCMP_CHISQR)
-        if result < aux:                                            #Confere qual o maior resultado das comparações nas iterações
-            aux = result
-            img_aux = comp                                          #Guarda o nome da imagem com maior semelhança
-
-    #Verifica pelo nome da imagem, a qual classe pertence teste
-    verifica_classe(img_aux, teste)
-
+compara_metodo("HISTCMP_CHISQR")
 chisqr_result = calcula_acerto()                                    
 print("A taxa de acerto do método CHISQR é:",chisqr_result)
 limpa_listas()
 
 #Comparação usando HISTCMP_INTERSECT
-for teste in os.listdir("."):                                       #Le todos os arquivos do diretório corrente
-    aux = 0
-    if not(teste.endswith(".bmp")):                                 #Se não for imagem.bmp pula pra próxima iteração
-        continue
-    img1 = cv2.imread(teste)
-    hist1 = cv2.calcHist([img1], [2], None, [256], [0,256])
-    cv2.normalize(hist1, hist1, 0, 255, cv2.NORM_MINMAX)
-
-    for comp in os.listdir("."):
-        if (not(comp.endswith(".bmp")) or (comp == teste)):         #Se não for imagem.bmp ou se a imagem teste
-            continue                                                #for a mesma da comparação, pula pra próxima iteração
-        img2 = cv2.imread(comp)
-        hist2 = cv2.calcHist([img2], [2], None, [256], [0,256])
-        cv2.normalize(hist2, hist2, 0, 255, cv2.NORM_MINMAX)
-        result = cv2.compareHist(hist1, hist2, cv2.HISTCMP_INTERSECT)
-        if result > aux:                                            #Confere qual o maior resultado das comparações nas iterações
-            aux = result
-            img_aux = comp                                          #Guarda o nome da imagem com maior semelhança
-
-    #Verifica pelo nome da imagem, a qual classe pertence teste
-    verifica_classe(img_aux, teste)
-
+compara_metodo("HISTCMP_INTERSECT")
 intersect_result = calcula_acerto()                                    
 print("A taxa de acerto do método INTERSECT é:",intersect_result)
 limpa_listas()
 
 #Comparação usando HISTCMP_BHATTACHARYYA
-for teste in os.listdir("."):                                       #Le todos os arquivos do diretório corrente
-    aux = 100
-    if not(teste.endswith(".bmp")):                                 #Se não for imagem.bmp pula pra próxima iteração
-        continue
-    img1 = cv2.imread(teste)
-    hist1 = cv2.calcHist([img1], [2], None, [256], [0,256])
-    cv2.normalize(hist1, hist1, 0, 255, cv2.NORM_MINMAX)
-
-    for comp in os.listdir("."):
-        if (not(comp.endswith(".bmp")) or (comp == teste)):         #Se não for imagem.bmp ou se a imagem teste
-            continue                                                #for a mesma da comparação, pula pra próxima iteração
-        img2 = cv2.imread(comp)
-        hist2 = cv2.calcHist([img2], [2], None, [256], [0,256])
-        cv2.normalize(hist2, hist2, 0, 255, cv2.NORM_MINMAX)
-        result = cv2.compareHist(hist1, hist2, cv2.HISTCMP_BHATTACHARYYA)
-        if result < aux:                                            #Confere qual o maior resultado das comparações nas iterações
-            aux = result
-            img_aux = comp                                          #Guarda o nome da imagem com maior semelhança
-
-    #Verifica pelo nome da imagem, a qual classe pertence teste
-    verifica_classe(img_aux, teste)
-
+compara_metodo("HISTCMP_BHATTACHARYYA")
 BHATTACHARYYA_result = calcula_acerto()                                    
 print("A taxa de acerto do método BHATTACHARYYA é:",BHATTACHARYYA_result)
 limpa_listas()
