@@ -1,6 +1,4 @@
 import cv2
-from cv2 import HISTCMP_CORREL
-from matplotlib import pyplot as plt
 import os
 from os import listdir
 
