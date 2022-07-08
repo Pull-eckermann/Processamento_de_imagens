@@ -6,27 +6,24 @@ import matplotlib.pyplot as plt
 #Confere se o programa foi executado com o número certo de argumentos
 if len(sys.argv) != 3:
   print("ERRO DE SINTAXE: python3 floresta.py <IMG ENTRADA> <IMG SAIDA>")
-  exit()
+  exit(0)
 
 img = cv2.imread(sys.argv[1])
-img_rgb = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+img_hsv = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
 
-r, g, b = cv2.split(img_rgb)
-r, g, b = r.flatten(), g.flatten(), b.flatten()
+h, s, v = cv2.split(img_hsv)
+h = h.flatten()
 
-r_med = int(sum(r) / len(r))
-g_med = int(sum(g) / len(g))
-b_med = int(sum(b) / len(b))
+h_med = int(sum(h) / len(h))
 
-limitador1 = (r_med-40,g_med-40,b_med-40)
-limitador2 = (r_med+40,g_med+40,b_med+40)
+limitador1 = (h_med-30,0,0)
+limitador2 = (h_med+30,255,255)
 
-mask = cv2.inRange(img, limitador1, limitador2)
+mask = cv2.inRange(img_hsv, limitador1, limitador2)
 result = cv2.bitwise_and(img, img, mask = mask)
 
 plt.subplot(1, 2, 1)
-plt.imshow(img)
+plt.imshow(img_hsv)
 plt.subplot(1, 2, 2)
 plt.imshow(result)
 plt.show()
-
