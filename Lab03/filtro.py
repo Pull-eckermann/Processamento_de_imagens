@@ -33,13 +33,12 @@ def filtro_mediana(img, mask):
 
 def filtro_empilhamento(img, nivel, n):
     img_emp = sp_noise(img, nivel)
+    img_emp = cv2.divide(img_emp, n)
     #Gera n imagens e soma pixel a pixel, guardando em img_emp  
     for i in range(0,n-1):
         noise_img = sp_noise(img, nivel)
+        noise_img = cv2.divide(noise_img, n)
         img_emp = cv2.add(noise_img,img_emp)
-    
-    #Divide pelo número de imagens empilhadas, gerando a média
-    img_emp = cv2.divide(img_emp, n)
 
     return img_emp
 
