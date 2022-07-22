@@ -50,8 +50,8 @@ if len(sys.argv) != 5:
     exit(0)
 
 mask_media = 13                 #Tamanho da máscara definida para media
-mask_mediana = 5                    #Mascara para mediana
-n_empilhamento = 20                #Número de imagens a empilhar
+mask_mediana = 3                    #Mascara para mediana
+n_empilhamento = 10                #Número de imagens a empilhar
 img = cv2.imread(sys.argv[1],0)
 
 if sys.argv[3] == '0':
