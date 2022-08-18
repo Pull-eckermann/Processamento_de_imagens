@@ -18,38 +18,12 @@ if sys.argv[1] == '-l':
     
     _, bin_img = cv2.threshold(img,0,255,cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)
     bin_img = cv2.medianBlur(bin_img,5)
+    kernel = cv2.getStructuringElement(cv2.MORPH_CROSS,(5,5))
+    b_rect = cv2.dilate(bin_img,kernel,iterations = 40)
+    cnt,_ = cv2.findContours(b_rect, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     #Tentativa de rotação automática https://pyimagesearch.com/2017/02/20/text-skew-correction-opencv-python/
-    coords = list()
-    h, l = bin_img.shape
-    for i in range(1,h):
-      for x in range(1,l):
-        if bin_img(h,l) == 255:
-          coords.append((h,l))
-          break
-      break
-    for i in range(h,1):
-      for x in range(1,l):
-        if bin_img[h,l] == 255:
-          coords.append((h,l))
-          break
-      break
-    for i in range(1,h):
-      for x in range(l,1):
-        if bin_img[h,l] == 255:
-          coords.append((h,l))
-          break
-      break
-    for i in range(h,l):
-      for x in range(l,1):
-        if bin_img[h,l] == 255:
-          coords.append((h,l))
-          break
-      break
-    
-    
-    #coords = np.column_stack(np.where(bin_img > 0))
-    _, _ ,angle = cv2.minAreaRect(coords)
+    _, _ ,angle = cv2.minAreaRect(max(cnt))
     
     if angle < 45:
       (h, w) = bin_img.shape[:2]
@@ -58,19 +32,6 @@ if sys.argv[1] == '-l':
       bin_img = cv2.warpAffine(bin_img, M, (w, h))
     print(angle)
 
-    # kernel = np.array([[0, 0, 0, 0, 0],
-    #                   [0, 0, 0, 0, 0],
-    #                   [1, 1, 1, 1, 1],
-    #                   [0, 0, 0, 0, 0],
-    #                   [0, 0, 0, 0, 0]], dtype=np.uint8)
-    #h_dilate = cv2.dilate(bin_img,kernel,iterations = 20)
-    #kernel = np.array([[0, 0, 1, 0, 0],
-    #                   [0, 0, 1, 0, 0],
-    #                   [0, 0, 1, 0, 0],
-    #                   [0, 0, 1, 0, 0],
-    #                   [0, 0, 1, 0, 0]], dtype=np.uint8)
-    #v_dilate = cv2.dilate(bin_img,kernel,iterations = 10)
-    #bin_img = cv2.bitwise_and(h_dilate,v_dilate)
     bin_img = cv2.medianBlur(bin_img,5)
     
     kernel = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -94,3 +55,19 @@ if sys.argv[1] == '-l':
       acertos = acertos + 1
 
 print('Cartas corretas:',acertos,'de 10')
+
+
+
+# kernel = np.array([[0, 0, 0, 0, 0],
+#                   [0, 0, 0, 0, 0],
+#                   [1, 1, 1, 1, 1],
+#                   [0, 0, 0, 0, 0],
+#                   [0, 0, 0, 0, 0]], dtype=np.uint8)
+#h_dilate = cv2.dilate(bin_img,kernel,iterations = 20)
+#kernel = np.array([[0, 0, 1, 0, 0],
+#                   [0, 0, 1, 0, 0],
+#                   [0, 0, 1, 0, 0],
+#                   [0, 0, 1, 0, 0],
+#                   [0, 0, 1, 0, 0]], dtype=np.uint8)
+#v_dilate = cv2.dilate(bin_img,kernel,iterations = 10)
+#bin_img = cv2.bitwise_and(h_dilate,v_dilate)
