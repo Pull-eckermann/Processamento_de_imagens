@@ -1,11 +1,15 @@
 import numpy as np
 import tensorflow as tf
 import keras
-from keras.layers import GlobalAveragePooling2D, Dense, Dropout
+from keras.layers import GlobalAveragePooling2D, Dense, Dropout, Flatten
 from keras.models import Model
-from keras.callbacks import ModelCheckpoint, EarlyStopping
-from keras.applications import ResNet50
+from keras.callbacks import EarlyStopping
+from keras.applications import VGG16, ResNet50, ResNet50V2, EfficientNetB4
 from keras.applications.resnet import preprocess_input
+from matplotlib import pyplot as plt
+import pandas as pd
+
+tf.get_logger().setLevel('ERROR')
 
 # Tamanho imagem
 img_rows, img_cols = 224, 224
@@ -16,25 +20,28 @@ input_shape = (img_rows, img_cols, 3)
 
 batch_size = 32
 
-path_train = './simpsons/Treino'
-path_test = './simpsons/Valid/'
-
 #Apresentando base de dados
+path_train = './simpsons/Treino/'
+path_test = './simpsons/Valid/'
+path_train_c = './simpsons_cropped/20_simpsons_crop/Treino/'
+path_test_c = './simpsons_cropped/20_simpsons_crop/Valid/'
+
+
 train_dataset = tf.keras.utils.image_dataset_from_directory(
-        path_train,
+        path_train_c,
         image_size=(img_rows, img_cols),
         color_mode="rgb",
         batch_size=batch_size,
         shuffle=False)
 test_dataset = tf.keras.utils.image_dataset_from_directory(
-        path_test,
+        path_test_c,
         image_size=(img_rows, img_cols),
         color_mode="rgb",
         batch_size=batch_size,
         shuffle=False)
 
 AUTOTUNE = tf.data.AUTOTUNE
-
+  
 train_dataset = train_dataset.cache().prefetch(buffer_size=AUTOTUNE) #Otimização
 test_dataset = test_dataset.cache().prefetch(buffer_size=AUTOTUNE)
 
@@ -44,9 +51,9 @@ num_classes = 6
 
 n_epochs = 100
 
-batch_size = 32
-
 seed = 42
+
+patience = 15
 
 # loss
 loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
@@ -58,7 +65,7 @@ data_augmentation = tf.keras.Sequential([tf.keras.layers.experimental.preprocess
                                          tf.keras.layers.experimental.preprocessing.RandomZoom(0.2),
                                          tf.keras.layers.experimental.preprocessing.RandomContrast(0.2, 0.2)])
 
-#Criando modelo
+#Criando modelo extrator de características
 resnet50 = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape) #Corta camadas
 resnet50.trainable = False #Para o primeiro treinamento as camadas convolucionais não serão treinadas
 inputs = keras.Input(shape=input_shape)
@@ -68,24 +75,13 @@ x = resnet50(x, training=False) #Camadas de Batch Normalization em inference mod
 x = GlobalAveragePooling2D()(x)
 x = keras.layers.Dropout(0.4)(x) # Camada de Dropout
 predictions = Dense(num_classes)(x) #Camada Densa sem ativação, pois a loss foi definida como from_logits=True
-model = Model(inputs, predictions)
+model = Model(inputs, predictions)     
 
 #Treinamento camada densa
 opt_dense = keras.optimizers.Adam()
 model.compile(metrics=metrics, loss=loss, optimizer=opt_dense)
-callbacks_dense = [EarlyStopping(patience=10)]
+callbacks_dense = [EarlyStopping(patience=patience)]
 history_dense =model.fit(train_dataset, epochs=n_epochs, verbose=1, validation_data=test_dataset, callbacks=callbacks_dense)
-
-##Treinamento completo
-#esnet50.trainable = True #Liberando todas as camadas com excessão das camadas de Batch Normalization
-#pt_completo = keras.optimizers.Adam(learning_rate=0.00001)
-#odel.compile(metrics=metrics, loss=loss, optimizer=opt_completo)
-#allbacks_dense_completo = [EarlyStopping(patience=15), 
-#                           ModelCheckpoint(filepath='./modelo/', save_weights_only=False, 
-#                                           verbose=1, monitor='val_accuracy', mode='max', 
-#                                           save_best_only=True)]
-#istory_completo = model.fit(train_dataset, epochs=n_epochs, verbose=1, validation_data=test_dataset, callbacks=callbacks_dense_completo)
-#best_model = tf.keras.models.load_model('./modelo/')
 
 #=====================VETOR DE CARACTERISTICAS====================
 #Extraindo características
@@ -119,15 +115,23 @@ cm = confusion_matrix(y_test, y_pred)
 print (cm)
 print(classification_report(y_test, y_pred))
 
+#Gera gráfico
+pdhistory = pd.DataFrame(history_dense.history)
+pdhistory.index += 1
+plt.figure(figsize=(20,8))
+plt.plot(pdhistory['loss'])
+plt.plot(pdhistory['val_loss'])
+plt.title('model loss')
+plt.ylabel('loss')
+plt.xlabel('epoch')
+plt.legend(['train', 'test'], loc='upper left')
+plt.savefig(str(batch_size) + "_" + str(patience) + "_" + 'simpsons_cropped__loss' + ".png")
 
-
-
-
-
-##Criando extrator modelo (Mais simplificado porém com melhor acurácia)
-#cnn = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
-#inputs = keras.Input(shape=input_shape)
-#x = preprocess_input(inputs)
-#x = cnn(x)
-#output = GlobalAveragePooling2D()(x)
-#model = Model(inputs, output)
+plt.figure(figsize=(20,8))
+plt.plot(pdhistory['accuracy'])
+plt.plot(pdhistory['val_accuracy'])
+plt.title('model accuracy')
+plt.ylabel('accuracy')
+plt.xlabel('epoch')
+plt.legend(['train', 'test'], loc='upper left')
+plt.savefig(str(batch_size) + "_" + str(patience) + "_" + 'simpsons_cropped_accuracy' + ".png")
